@@ -5,9 +5,10 @@ const session = require('express-session');
 const bcrypt = require('bcryptjs');
 const path = require('path');
 const fs = require('fs');
+require('dotenv').config();
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // Ensure uploads directory exists
 const uploadDir = path.join(__dirname, 'public', 'uploads');

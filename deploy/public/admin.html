@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Ropa Americana</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; color: #333; }
+    
+    /* Login Page */
+    .login-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); }
+    .login-box { background: #fff; padding: 3rem; border-radius: 12px; width: 100%; max-width: 400px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+    .login-box h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; text-align: center; }
+    .login-box p { text-align: center; color: #888; margin-bottom: 2rem; }
+    .form-group { margin-bottom: 1.25rem; }
+    .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; font-size: 0.9rem; }
+    .form-group input { width: 100%; padding: 0.75rem 1rem; border: 1px solid #ddd; border-radius: 6px; font-size: 1rem; transition: border-color 0.2s; }
+    .form-group input:focus { outline: none; border-color: #c62828; }
+    .login-box .btn { width: 100%; padding: 0.875rem; background: #c62828; color: #fff; border: none; border-radius: 6px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+    .login-box .btn:hover { background: #b71c1c; }
+    .error-msg { background: #fee; color: #c00; padding: 0.75rem; border-radius: 6px; margin-bottom: 1rem; font-size: 0.9rem; display: none; }
+    .error-msg.show { display: block; }
+
+    /* Admin Layout */
+    .admin-layout { display: none; min-height: 100vh; }
+    .admin-layout.visible { display: flex; }
+    
+    .sidebar { width: 260px; background: #1a1a1a; color: #fff; height: 100vh; position: fixed; left: 0; top: 0; display: flex; flex-direction: column; z-index: 100; }
+    .sidebar-header { padding: 1.5rem; border-bottom: 1px solid #333; }
+    .sidebar-header h2 { font-size: 1.25rem; font-weight: 700; }
+    .sidebar-header h2 span { color: #c62828; }
+    .sidebar-nav { flex: 1; padding: 1rem 0; overflow-y: auto; }
+    .nav-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.875rem 1.5rem; color: #aaa; text-decoration: none; transition: all 0.2s; border-left: 3px solid transparent; }
+    .nav-item:hover, .nav-item.active { background: #252525; color: #fff; border-left-color: #c62828; }
+    .nav-item svg { width: 20px; height: 20px; }
+    .sidebar-footer { padding: 1rem 1.5rem; border-top: 1px solid #333; }
+    .btn-logout { width: 100%; padding: 0.75rem; background: transparent; color: #888; border: 1px solid #333; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+    .btn-logout:hover { background: #c62828; border-color: #c62828; color: #fff; }
+
+    .main-content { flex: 1; margin-left: 260px; padding: 2rem; }
+    .page { display: none; }
+    .page.active { display: block; animation: fadeIn 0.3s; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    
+    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; }
+    .page-header h1 { font-size: 1.75rem; font-weight: 700; }
+    .page-header .btn { flex-shrink: 0; }
+    .btn { padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; text-decoration: none; transition: all 0.2s; cursor: pointer; border: none; font-size: 0.875rem; display: inline-flex; align-items: center; gap: 0.5rem; white-space: nowrap; }
+    .btn-primary { background: #c62828; color: #fff; box-shadow: 0 2px 8px rgba(198, 40, 40, 0.3); }
+    .btn-primary:hover { background: #b71c1c; box-shadow: 0 4px 12px rgba(198, 40, 40, 0.4); transform: translateY(-1px); }
+    .btn-secondary { background: #fff; color: #333; border: 1px solid #ddd; }
+    .btn-secondary:hover { background: #f5f5f5; }
+    .btn-danger { background: #fff; color: #c62828; border: 1px solid #c62828; }
+    .btn-danger:hover { background: #c62828; color: #fff; }
+    .btn-sm { padding: 0.375rem 0.75rem; font-size: 0.8rem; }
+
+    /* Tables */
+    .table-container { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 1rem; text-align: left; border-bottom: 1px solid #eee; }
+    th { background: #fafafa; font-weight: 600; color: #666; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; }
+    tr:hover td { background: #fafafa; }
+    .product-img { width: 50px; height: 50px; object-fit: cover; border-radius: 4px; }
+    .status-badge { padding: 0.25rem 0.625rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; text-transform: capitalize; }
+    .status-badge.active { background: #e8f5e9; color: #2e7d32; }
+    .status-badge.inactive { background: #f5f5f5; color: #888; }
+    .price-cell { font-weight: 600; }
+    .actions { display: flex; gap: 0.5rem; }
+    .icon-btn { width: 32px; height: 32px; border: 1px solid #ddd; background: #fff; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+    .icon-btn:hover { background: #f5f5f5; }
+    .icon-btn.delete:hover { background: #fee; border-color: #fcc; color: #c00; }
+    .icon-btn svg { width: 16px; height: 16px; }
+
+    /* Forms */
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; }
+    .form-section { background: #fff; padding: 1.5rem; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 1.5rem; }
+    .form-section h3 { font-size: 1rem; font-weight: 600; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid #eee; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
+    
+    .image-preview { width: 100px; height: 100px; border-radius: 8px; background: #f5f5f5; display: flex; align-items: center; justify-content: center; overflow: hidden; margin-top: 0.5rem; }
+    .image-preview img { width: 100%; height: 100%; object-fit: cover; }
+    .image-preview.empty::after { content: '📷'; font-size: 2rem; opacity: 0.5; }
+
+    /* Modal */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 1rem; }
+    .modal-overlay.visible { display: flex; }
+    .modal { background: #fff; border-radius: 12px; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+    .modal-header { padding: 1.5rem; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+    .modal-header h3 { font-size: 1.1rem; font-weight: 600; }
+    .modal-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #888; padding: 0; line-height: 1; }
+    .modal-body { padding: 1.5rem; }
+    .modal-footer { padding: 1rem 1.5rem; border-top: 1px solid #eee; display: flex; justify-content: flex-end; gap: 0.75rem; }
+
+    /* Empty state */
+    .empty-state { text-align: center; padding: 3rem; color: #888; }
+    .empty-state svg { width: 64px; height: 64px; margin-bottom: 1rem; opacity: 0.5; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); transition: transform 0.3s; }
+      .sidebar.open { transform: translateX(0); }
+      .main-content { margin-left: 0; padding: 1rem; }
+      .mobile-menu-btn { display: block; }
+    }
+    .mobile-menu-btn { display: none; position: fixed; bottom: 1.5rem; left: 1.5rem; z-index: 99; width: 56px; height: 56px; border-radius: 50%; background: #c62828; color: #fff; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.2); cursor: pointer; }
+  </style>
+</head>
+<body>
+  <!-- Login Page -->
+  <div class="login-page" id="loginPage">
+    <div class="login-box">
+      <h1>Ropa<span style="color:#c62828">Americana</span></h1>
+      <p>Panel de Administración</p>
+      <div class="error-msg" id="loginError"></div>
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="username">Usuario</label>
+          <input type="text" id="username" name="username" required autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label for="password">Contraseña</label>
+          <input type="password" id="password" name="password" required autocomplete="current-password">
+        </div>
+        <button type="submit" class="btn">Iniciar Sesión</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Admin Layout -->
+  <div class="admin-layout" id="adminLayout">
+    <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menú">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="18" x2="21" y2="18"></line>
+      </svg>
+    </button>
+    
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h2>Ropa<span>Americana</span></h2>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="#" class="nav-item active" data-page="products">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+          Productos
+        </a>
+        <a href="#" class="nav-item" data-page="categories">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h7"></path></svg>
+          Categorías
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <button class="btn-logout" id="logoutBtn">Cerrar Sesión</button>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <!-- Products Page -->
+      <section class="page active" id="page-products">
+        <div class="page-header">
+          <h1>Productos</h1>
+          <button class="btn btn-primary" id="addProductBtn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            Nuevo Producto
+          </button>
+        </div>
+        <div class="table-container">
+          <table id="productsTable">
+            <thead>
+              <tr>
+                <th>Imagen</th>
+                <th>Nombre</th>
+                <th>Categoría</th>
+                <th>Precio</th>
+                <th>Talla</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="empty-state" id="productsEmpty" style="display:none;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+          <p>No hay productos. Haz clic en "Nuevo Producto" para agregar uno.</p>
+        </div>
+      </section>
+
+      <!-- Categories Page -->
+      <section class="page" id="page-categories">
+        <div class="page-header">
+          <h1>Categorías</h1>
+          <button class="btn btn-primary" id="addCategoryBtn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            Nueva Categoría
+          </button>
+        </div>
+        <div class="table-container">
+          <table id="categoriesTable">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Mostrar como</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Product Modal -->
+  <div class="modal-overlay" id="productModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="productModalTitle">Nuevo Producto</h3>
+        <button class="modal-close" id="closeProductModal">&times;</button>
+      </div>
+      <form id="productForm" enctype="multipart/form-data">
+        <div class="modal-body">
+          <input type="hidden" name="id" id="productId">
+          <div class="form-group">
+            <label>Categoría</label>
+            <select name="category_id" id="productCategory" required style="width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:6px;">
+              <option value="">Seleccionar categoría</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Nombre</label>
+            <input type="text" name="name" id="productName" required style="width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:6px;">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Precio (€)</label>
+              <input type="number" name="price" id="productPrice" step="0.01" min="0" required style="width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:6px;">
+            </div>
+            <div class="form-group">
+              <label>Talla</label>
+              <select name="size" id="productSize" required style="width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:6px;">
+                <option value="XS">XS</option>
+                <option value="S">S</option>
+                <option value="M" selected>M</option>
+                <option value="L">L</option>
+                <option value="XL">XL</option>
+                <option value="XXL">XXL</option>
+                <option value="Única">Única</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Estado</label>
+            <select name="status" id="productStatus" style="width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:6px;">
+              <option value="active">Activo</option>
+              <option value="inactive">Inactivo</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Imagen</label>
+            <input type="file" name="image" id="productImage" accept="image/*" style="width:100%;padding:0.5rem;">
+            <div class="image-preview empty" id="imagePreview"></div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="cancelProductModal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Category Modal -->
+  <div class="modal-overlay" id="categoryModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="categoryModalTitle">Nueva Categoría</h3>
+        <button class="modal-close" id="closeCategoryModal">&times;</button>
+      </div>
+      <form id="categoryForm">
+        <div class="modal-body">
+          <input type="hidden" name="id" id="categoryId">
+          <div class="form-group">
+            <label>Nombre (slug)</label>
+            <input type="text" name="name" id="categoryName" required placeholder="ej: camisetas" style="width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:6px;">
+          </div>
+          <div class="form-group">
+            <label>Nombre para mostrar</label>
+            <input type="text" name="display_name" id="categoryDisplayName" required placeholder="ej: Camisetas" style="width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:6px;">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="cancelCategoryModal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // State
+    let categories = [];
+    let products = [];
+    let editingProductId = null;
+    let editingCategoryId = null;
+
+    // DOM Elements
+    const loginPage = document.getElementById('loginPage');
+    const adminLayout = document.getElementById('adminLayout');
+    const loginForm = document.getElementById('loginForm');
+    const loginError = document.getElementById('loginError');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const sidebar = document.getElementById('sidebar');
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const navItems = document.querySelectorAll('.nav-item');
+    const pages = document.querySelectorAll('.page');
+
+    // Product elements
+    const productsTable = document.getElementById('productsTable').querySelector('tbody');
+    const productsEmpty = document.getElementById('productsEmpty');
+    const addProductBtn = document.getElementById('addProductBtn');
+    addProductBtn.addEventListener('click', () => openProductModal());
+    const productModal = document.getElementById('productModal');
+    const productModalTitle = document.getElementById('productModalTitle');
+    const productForm = document.getElementById('productForm');
+    const productCategory = document.getElementById('productCategory');
+    const imagePreview = document.getElementById('imagePreview');
+    const closeProductModal = document.getElementById('closeProductModal');
+    const cancelProductModal = document.getElementById('cancelProductModal');
+
+    // Category elements
+    const categoriesTable = document.getElementById('categoriesTable').querySelector('tbody');
+    const addCategoryBtn = document.getElementById('addCategoryBtn');
+    addCategoryBtn.addEventListener('click', () => openCategoryModal());
+    const categoryModal = document.getElementById('categoryModal');
+    const categoryModalTitle = document.getElementById('categoryModalTitle');
+    const categoryForm = document.getElementById('categoryForm');
+    const closeCategoryModal = document.getElementById('closeCategoryModal');
+    const cancelCategoryModal = document.getElementById('cancelCategoryModal');
+
+    // API helper
+    async function api(path, options = {}) {
+      const res = await fetch('/api' + path, {
+        headers: { 'Content-Type': 'application/json', ...options.headers },
+        ...options
+      });
+      if (res.status === 401) { showLogin(); throw new Error('Unauthorized'); }
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Error');
+      return data;
+    }
+
+    // Auth
+    async function checkAuth() {
+      try {
+        await api('/admin/me');
+        showAdmin();
+      } catch { showLogin(); }
+    }
+
+    function showLogin() {
+      loginPage.style.display = 'flex';
+      adminLayout.classList.remove('visible');
+    }
+
+    function showAdmin() {
+      loginPage.style.display = 'none';
+      adminLayout.classList.add('visible');
+      loadAll();
+    }
+
+    // Login
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(loginForm);
+      try {
+        await api('/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: formData.get('username'), password: formData.get('password') })
+        });
+        showAdmin();
+      } catch (err) {
+        loginError.textContent = err.message;
+        loginError.classList.add('show');
+      }
+    });
+
+    logoutBtn.addEventListener('click', async () => {
+      await api('/admin/logout', { method: 'POST' });
+      showLogin();
+    });
+
+    // Navigation
+    navItems.forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.preventDefault();
+        navItems.forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+        pages.forEach(p => p.classList.remove('active'));
+        document.getElementById('page-' + item.dataset.page).classList.add('active');
+        sidebar.classList.remove('open');
+      });
+    });
+
+    mobileMenuBtn.addEventListener('click', () => sidebar.classList.toggle('open'));
+
+    // Load data
+    async function loadAll() {
+      await loadCategories();
+      await loadProducts();
+    }
+
+    async function loadCategories() {
+      categories = await api('/admin/categories');
+      renderCategorySelect();
+      renderCategoriesTable();
+    }
+
+    async function loadProducts() {
+      products = await api('/admin/products');
+      renderProductsTable();
+    }
+
+    // Render category select
+    function renderCategorySelect() {
+      productCategory.innerHTML = '<option value="">Seleccionar categoría</option>' +
+        categories.map(c => `<option value="${c.id}">${c.display_name}</option>`).join('');
+    }
+
+    // Products Table
+    function renderProductsTable() {
+      if (!products.length) {
+        productsTable.innerHTML = '';
+        productsTable.parentElement.style.display = 'none';
+        productsEmpty.style.display = 'block';
+        return;
+      }
+      productsTable.parentElement.style.display = '';
+      productsEmpty.style.display = 'none';
+      productsTable.innerHTML = products.map(p => `
+        <tr data-id="${p.id}">
+          <td>${p.image_url ? `<img src="${p.image_url}" class="product-img" alt="${p.name}">` : '<span style="color:#ccc;">📷</span>'}</td>
+          <td>${p.name}</td>
+          <td>${p.category_display}</td>
+          <td class="price-cell">${formatPrice(p.price)}</td>
+          <td>${p.size}</td>
+          <td><span class="status-badge ${p.status}">${p.status}</span></td>
+          <td>
+            <div class="actions">
+              <button class="icon-btn edit-btn" data-id="${p.id}" title="Editar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+              </button>
+              <button class="icon-btn delete delete-btn" data-id="${p.id}" title="Eliminar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+
+      // Event listeners
+      productsTable.querySelectorAll('.edit-btn').forEach(btn => 
+        btn.addEventListener('click', () => openProductModal(btn.dataset.id))
+      );
+      productsTable.querySelectorAll('.delete-btn').forEach(btn => 
+        btn.addEventListener('click', () => deleteProduct(btn.dataset.id))
+      );
+    }
+
+    // Categories Table
+    function renderCategoriesTable() {
+      categoriesTable.innerHTML = categories.map(c => `
+        <tr data-id="${c.id}">
+          <td>${c.name}</td>
+          <td>${c.display_name}</td>
+          <td>
+            <div class="actions">
+              <button class="icon-btn edit-btn" data-id="${c.id}" title="Editar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+              </button>
+              <button class="icon-btn delete delete-btn" data-id="${c.id}" title="Eliminar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+
+      categoriesTable.querySelectorAll('.edit-btn').forEach(btn => 
+        btn.addEventListener('click', () => openCategoryModal(btn.dataset.id))
+      );
+      categoriesTable.querySelectorAll('.delete-btn').forEach(btn => 
+        btn.addEventListener('click', () => deleteCategory(btn.dataset.id))
+      );
+    }
+
+    // Format price
+    function formatPrice(price) {
+      return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2 }).format(price);
+    }
+
+    // Product Modal
+    function openProductModal(id = null) {
+      editingProductId = id;
+      productForm.reset();
+      imagePreview.className = 'image-preview empty';
+      imagePreview.innerHTML = '';
+      
+      if (id) {
+        const p = products.find(x => x.id == id);
+        productModalTitle.textContent = 'Editar Producto';
+        document.getElementById('productId').value = p.id;
+        document.getElementById('productName').value = p.name;
+        document.getElementById('productPrice').value = p.price;
+        document.getElementById('productSize').value = p.size;
+        document.getElementById('productStatus').value = p.status;
+        document.getElementById('productCategory').value = p.category_id;
+        if (p.image_url) {
+          imagePreview.className = 'image-preview';
+          imagePreview.innerHTML = `<img src="${p.image_url}" alt="${p.name}">`;
+        }
+      } else {
+        productModalTitle.textContent = 'Nuevo Producto';
+        document.getElementById('productId').value = '';
+      }
+      productModal.classList.add('visible');
+    }
+
+    function closeProductModalFn() {
+      productModal.classList.remove('visible');
+      editingProductId = null;
+    }
+
+    closeProductModal.addEventListener('click', closeProductModalFn);
+    cancelProductModal.addEventListener('click', closeProductModalFn);
+
+    // Image preview
+    document.getElementById('productImage').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          imagePreview.className = 'image-preview';
+          imagePreview.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+        };
+        reader.readAsDataURL(file);
+      } else {
+        imagePreview.className = 'image-preview empty';
+        imagePreview.innerHTML = '';
+      }
+    });
+
+    // Product Form Submit
+    productForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(productForm);
+      const isEdit = !!editingProductId;
+      
+      try {
+        if (isEdit) {
+          await api('/admin/products/' + editingProductId, {
+            method: 'PUT',
+            body: formData
+          });
+        } else {
+          await api('/admin/products', {
+            method: 'POST',
+            body: formData
+          });
+        }
+        closeProductModalFn();
+        loadProducts();
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+
+    // Delete Product
+    async function deleteProduct(id) {
+      if (!confirm('¿Eliminar este producto?')) return;
+      try {
+        await api('/admin/products/' + id, { method: 'DELETE' });
+        loadProducts();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    // Category Modal
+    function openCategoryModal(id = null) {
+      editingCategoryId = id;
+      categoryForm.reset();
+      
+      if (id) {
+        const c = categories.find(x => x.id == id);
+        categoryModalTitle.textContent = 'Editar Categoría';
+        document.getElementById('categoryId').value = c.id;
+        document.getElementById('categoryName').value = c.name;
+        document.getElementById('categoryDisplayName').value = c.display_name;
+      } else {
+        categoryModalTitle.textContent = 'Nueva Categoría';
+        document.getElementById('categoryId').value = '';
+      }
+      categoryModal.classList.add('visible');
+    }
+
+    function closeCategoryModalFn() {
+      categoryModal.classList.remove('visible');
+      editingCategoryId = null;
+    }
+
+    closeCategoryModal.addEventListener('click', closeCategoryModalFn);
+    cancelCategoryModal.addEventListener('click', closeCategoryModalFn);
+
+    // Category Form Submit
+    categoryForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(categoryForm);
+      const data = { name: formData.get('name'), display_name: formData.get('display_name') };
+      const isEdit = !!editingCategoryId;
+      
+      try {
+        if (isEdit) {
+          // For edit, we need to delete and recreate since we don't have PUT for categories
+          // But let's add PUT endpoint support in the form
+          await api('/admin/categories', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
+        } else {
+          await api('/admin/categories', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
+        }
+        closeCategoryModalFn();
+        loadCategories();
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+
+    // Delete Category
+    async function deleteCategory(id) {
+      if (!confirm('¿Eliminar esta categoría?')) return;
+      try {
+        await api('/admin/categories/' + id, { method: 'DELETE' });
+        loadCategories();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    // Close modals on overlay click
+    [productModal, categoryModal].forEach(modal => {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.classList.remove('visible');
+      });
+    });
+
+    // Init
+    checkAuth();
+  </script>
+</body>
+</html>
