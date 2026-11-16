@@ -1,0 +1,1497 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>La Ropa Americana | Moda Única y Vintage</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter & Playfair Display -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            serif: ['Playfair Display', 'serif'],
+          },
+          colors: {
+            brand: {
+              bg: '#FAF8F5',
+              card: '#FFFFFF',
+              ink: '#1C1917',
+              muted: '#78716C',
+              accent: '#B45309',
+              accentHover: '#92400E',
+              border: '#E7E5E4'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Hide scrollbar for horizontal category pills on mobile */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    body {
+      background-color: #FAF8F5;
+      color: #1C1917;
+      -webkit-tap-highlight-color: transparent;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-amber-200 selection:text-stone-900">
+
+  <!-- =====================================================================
+       TOAST NOTIFICATION CONTAINER (Replaces alert/confirm)
+  ====================================================================== -->
+  <div id="toast-container" class="fixed bottom-4 right-4 left-4 sm:left-auto sm:w-96 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- =====================================================================
+       HEADER & NAVIGATION
+  ====================================================================== -->
+  <header class="sticky top-0 z-30 bg-brand-bg/90 backdrop-blur-md border-b border-brand-border">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16 sm:h-20">
+        <!-- Brand Logo -->
+        <a href="#" onclick="resetFilters(event)" class="flex items-center gap-2.5 group">
+          <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-stone-900 text-amber-50 flex items-center justify-center shadow-sm group-hover:bg-amber-800 transition-colors">
+            <i data-lucide="shirt" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h1 class="font-serif text-xl sm:text-2xl font-bold tracking-tight text-stone-900 leading-none">
+              La Ropa Americana
+            </h1>
+            <p class="text-[11px] sm:text-xs text-stone-500 font-medium tracking-wider uppercase mt-0.5">
+              Selección Exclusiva & Vintage
+            </p>
+          </div>
+        </a>
+
+        <!-- Header Actions -->
+        <div class="flex items-center gap-2 sm:gap-3">
+          <span id="header-count" class="hidden sm:inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-stone-200/70 text-stone-700">
+            0 prendas
+          </span>
+          <button
+            onclick="openAdminEntry()"
+            title="Panel de Administración"
+            class="p-2.5 rounded-xl border border-brand-border bg-white text-stone-600 hover:text-stone-900 hover:border-stone-400 transition-all shadow-xs flex items-center gap-1.5 text-xs font-medium"
+          >
+            <i data-lucide="lock" id="admin-lock-icon" class="w-4 h-4"></i>
+            <span class="hidden md:inline" id="admin-btn-label">Admin</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- =====================================================================
+       MAIN STOREFRONT VIEW
+  ====================================================================== -->
+  <main id="storefront-view" class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+    
+    <!-- Search & Status Filter Bar -->
+    <div class="flex flex-col sm:flex-row gap-3 mb-5">
+      <!-- Search Input -->
+      <div class="relative flex-1">
+        <i data-lucide="search" class="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+        <input
+          type="text"
+          id="search-input"
+          placeholder="Buscar chaqueta, camiseta, talla..."
+          oninput="handleSearch(this.value)"
+          class="w-full pl-10 pr-4 py-2.5 sm:py-3 rounded-xl bg-white border border-brand-border text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-stone-900/15 focus:border-stone-900 transition-all shadow-2xs"
+        />
+        <button
+          id="clear-search-btn"
+          onclick="clearSearch()"
+          class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700 p-1"
+        >
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- Status Filter Select -->
+      <div class="flex items-center gap-2">
+        <div class="relative w-full sm:w-48">
+          <i data-lucide="filter" class="w-4 h-4 text-stone-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+          <select
+            id="status-filter"
+            onchange="handleStatusFilter(this.value)"
+            class="w-full pl-9 pr-8 py-2.5 sm:py-3 rounded-xl bg-white border border-brand-border text-sm font-medium text-stone-700 focus:outline-none focus:ring-2 focus:ring-stone-900/15 focus:border-stone-900 appearance-none cursor-pointer shadow-2xs"
+          >
+            <option value="Todos">Estado: Todos</option>
+            <option value="Disponible">Disponible</option>
+            <option value="Reservado">Reservado</option>
+            <option value="Vendido">Vendido</option>
+          </select>
+          <i data-lucide="chevron-down" class="w-4 h-4 text-stone-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Category Pills (Horizontal scroll on mobile) -->
+    <div class="mb-6 sm:mb-8">
+      <div id="category-pills" class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+        <!-- Injected dynamically via JS -->
+      </div>
+    </div>
+
+    <!-- Product Grid -->
+    <div id="product-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3.5 sm:gap-6">
+      <!-- Product cards injected dynamically via JS -->
+    </div>
+
+    <!-- Empty State -->
+    <div id="empty-state" class="hidden py-16 px-4 text-center bg-white rounded-2xl border border-brand-border my-4">
+      <div class="w-12 h-12 rounded-full bg-stone-100 text-stone-400 flex items-center justify-center mx-auto mb-3">
+        <i data-lucide="package-search" class="w-6 h-6"></i>
+      </div>
+      <h3 class="text-base sm:text-lg font-semibold text-stone-900">No encontramos prendas</h3>
+      <p class="text-sm text-stone-500 mt-1 max-w-md mx-auto">
+        Intenta cambiar los filtros de categoría, estado o buscar con otras palabras.
+      </p>
+      <button
+        onclick="resetFilters()"
+        class="mt-4 px-4 py-2 rounded-xl bg-stone-900 text-white text-sm font-medium hover:bg-stone-800 transition-colors"
+      >
+        Ver todo el catálogo
+      </button>
+    </div>
+  </main>
+
+  <!-- =====================================================================
+       ADMIN PANEL VIEW (Hidden until logged in)
+  ====================================================================== -->
+  <section id="admin-view" class="hidden flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+    <!-- Admin Header Bar -->
+    <div class="bg-stone-900 text-white rounded-2xl p-4 sm:p-6 mb-6 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30">
+            Modo Administrador
+          </span>
+        </div>
+        <h2 class="text-xl sm:text-2xl font-bold mt-1.5">Gestión de Inventario</h2>
+        <p class="text-xs sm:text-sm text-stone-400 mt-0.5">
+          Sube varias fotos a la vez para crear slots automáticos y edita sus datos al instante.
+        </p>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <button
+          onclick="resetToDefaultData()"
+          title="Recargar datos iniciales del archivo HTML"
+          class="px-3 py-2.5 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 text-xs font-medium flex items-center gap-1.5 transition-colors border border-stone-700"
+        >
+          <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+          <span>Sincronizar Código</span>
+        </button>
+        <button
+          onclick="exitAdminView()"
+          class="px-3.5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs sm:text-sm font-semibold flex items-center gap-1.5 transition-colors"
+        >
+          <i data-lucide="store" class="w-4 h-4"></i>
+          <span>Ver Tienda</span>
+        </button>
+        <button
+          onclick="logoutAdmin()"
+          title="Cerrar sesión"
+          class="p-2.5 rounded-xl bg-red-950/60 hover:bg-red-900/80 text-red-300 transition-colors"
+        >
+          <i data-lucide="log-out" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Admin Tabs -->
+    <div class="flex items-center gap-2 border-b border-brand-border mb-6">
+      <button
+        id="tab-btn-products"
+        onclick="switchAdminTab('products')"
+        class="px-4 py-3 text-sm font-semibold border-b-2 border-stone-900 text-stone-900 flex items-center gap-2 transition-colors"
+      >
+        <i data-lucide="tag" class="w-4 h-4"></i>
+        <span>Prendas (<span id="admin-prod-count">0</span>)</span>
+      </button>
+      <button
+        id="tab-btn-categories"
+        onclick="switchAdminTab('categories')"
+        class="px-4 py-3 text-sm font-medium border-b-2 border-transparent text-stone-500 hover:text-stone-800 flex items-center gap-2 transition-colors"
+      >
+        <i data-lucide="folder-kanban" class="w-4 h-4"></i>
+        <span>Categorías (<span id="admin-cat-count">0</span>)</span>
+      </button>
+    </div>
+
+    <!-- TAB 1: PRODUCTS MANAGEMENT -->
+    <div id="admin-tab-products" class="space-y-6">
+      <!-- Multi-Photo Upload Dropzone & Manual Slot Bar -->
+      <div class="bg-white rounded-2xl border border-brand-border p-4 sm:p-5 shadow-2xs">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <div>
+            <h3 class="text-sm sm:text-base font-bold text-stone-900">Agregar Prendas</h3>
+            <p class="text-xs text-stone-500">Selecciona una o varias fotos para crear un slot por cada imagen, o crea uno manual.</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <select
+              id="upload-default-category"
+              title="Categoría por defecto para nuevas fotos"
+              class="px-3 py-2 rounded-xl border border-brand-border text-xs font-medium bg-stone-50 text-stone-700 focus:outline-none focus:border-stone-900"
+            >
+              <!-- Populated dynamically -->
+            </select>
+            <button
+              onclick="openProductFormModal()"
+              class="px-3.5 py-2 rounded-xl border border-stone-900 text-stone-900 hover:bg-stone-900 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-colors"
+            >
+              <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+              <span>Slot Manual (Ruta)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Drag & Drop / File Picker Area -->
+        <label
+          id="photo-dropzone"
+          ondragover="handleDragOver(event)"
+          ondragleave="handleDragLeave(event)"
+          ondrop="handleFileDrop(event)"
+          class="flex flex-col items-center justify-center w-full py-6 px-4 border-2 border-dashed border-stone-300 hover:border-amber-600 rounded-xl bg-stone-50/70 hover:bg-amber-50/30 cursor-pointer transition-all text-center"
+        >
+          <input
+            type="file"
+            id="multi-photo-input"
+            multiple
+            accept="image/*"
+            onchange="handlePhotoFilesSelected(event)"
+            class="hidden"
+          />
+          <div class="w-10 h-10 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center mb-2">
+            <i data-lucide="images" class="w-5 h-5"></i>
+          </div>
+          <p class="text-xs sm:text-sm font-semibold text-stone-800">
+            Toca para elegir fotos o arrástralas aquí
+          </p>
+          <p class="text-[11px] text-stone-500 mt-0.5">
+            Se creará una tarjeta individual por cada foto para que edites nombre, precio, talla y estado
+          </p>
+        </label>
+      </div>
+
+      <!-- Editable Slots Grid (Quick inline editing on mobile & desktop) -->
+      <div id="admin-products-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Product slots injected via JS -->
+      </div>
+    </div>
+
+    <!-- TAB 2: CATEGORIES MANAGEMENT -->
+    <div id="admin-tab-categories" class="hidden">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Add Category Form -->
+        <div class="bg-white p-5 rounded-2xl border border-brand-border h-fit shadow-2xs">
+          <h3 class="text-base font-bold text-stone-900 mb-1">Agregar Categoría</h3>
+          <p class="text-xs text-stone-500 mb-4">Crea una nueva sección para organizar la ropa.</p>
+          <form onsubmit="handleAddCategory(event)" class="space-y-3">
+            <div>
+              <label class="block text-xs font-semibold text-stone-700 mb-1">Nombre de la categoría</label>
+              <input
+                type="text"
+                id="new-category-input"
+                required
+                placeholder="Ej: Sudaderas, Gorras, Calzado..."
+                class="w-full px-3.5 py-2.5 rounded-xl border border-brand-border text-sm focus:outline-none focus:border-stone-900"
+              />
+            </div>
+            <button
+              type="submit"
+              class="w-full py-2.5 px-4 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-sm font-semibold transition-colors flex items-center justify-center gap-2"
+            >
+              <i data-lucide="folder-plus" class="w-4 h-4"></i>
+              <span>Crear Categoría</span>
+            </button>
+          </form>
+        </div>
+
+        <!-- Existing Categories List -->
+        <div class="md:col-span-2 bg-white rounded-2xl border border-brand-border overflow-hidden shadow-2xs">
+          <div class="px-5 py-4 border-b border-brand-border bg-stone-50 flex items-center justify-between">
+            <h3 class="text-sm font-bold text-stone-800">Categorías Activas</h3>
+            <span class="text-xs text-stone-500">Haz clic en el lápiz para renombrar</span>
+          </div>
+          <ul id="admin-categories-list" class="divide-y divide-brand-border">
+            <!-- Categories injected via JS -->
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =====================================================================
+       FOOTER
+  ====================================================================== -->
+  <footer class="mt-auto border-t border-brand-border bg-white py-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-stone-500">
+      <div class="flex items-center gap-2">
+        <span class="font-serif font-bold text-stone-800 text-sm">La Ropa Americana</span>
+        <span>•</span>
+        <span>Prendas seleccionadas con estilo</span>
+      </div>
+      <div class="flex items-center gap-4">
+        <span>Envíos y entregas locales</span>
+        <button
+          onclick="openAdminEntry()"
+          class="inline-flex items-center gap-1 text-stone-400 hover:text-stone-800 transition-colors"
+        >
+          <i data-lucide="settings" class="w-3.5 h-3.5"></i>
+          <span>Administración</span>
+        </button>
+      </div>
+    </div>
+  </footer>
+
+  <!-- =====================================================================
+       MODAL 1: PRODUCT DETAIL MODAL (Customer View)
+  ====================================================================== -->
+  <div id="product-detail-modal" class="hidden fixed inset-0 z-50 bg-stone-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-white w-full sm:max-w-2xl rounded-t-3xl sm:rounded-2xl overflow-hidden shadow-2xl border border-brand-border animate-in fade-in duration-200 max-h-[92vh] flex flex-col">
+      <!-- Top mobile handle & close button -->
+      <div class="flex items-center justify-between px-5 py-3.5 border-b border-brand-border">
+        <span id="detail-category-badge" class="px-2.5 py-1 rounded-lg bg-stone-100 text-stone-700 text-xs font-semibold">
+          Categoría
+        </span>
+        <button onclick="closeModal('product-detail-modal')" class="p-2 rounded-full hover:bg-stone-100 text-stone-500 transition-colors">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Modal Content -->
+      <div class="overflow-y-auto p-5 sm:p-6 grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
+        <!-- Image -->
+        <div class="aspect-[4/5] rounded-xl overflow-hidden bg-stone-100 border border-brand-border relative">
+          <img
+            id="detail-img"
+            src=""
+            alt=""
+            class="w-full h-full object-cover"
+          />
+          <div id="detail-status-overlay" class="absolute top-3 left-3"></div>
+        </div>
+
+        <!-- Info -->
+        <div class="flex flex-col justify-between">
+          <div>
+            <h3 id="detail-title" class="text-xl sm:text-2xl font-bold text-stone-900 leading-snug">
+              Título de la prenda
+            </h3>
+            <div class="mt-3 flex items-baseline gap-2">
+              <span id="detail-price" class="text-2xl sm:text-3xl font-bold text-stone-900">$0</span>
+              <span class="text-xs text-stone-500">Precio final</span>
+            </div>
+
+            <div class="mt-5 space-y-3 border-t border-brand-border pt-4">
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-stone-500">Talla disponible:</span>
+                <span id="detail-size" class="px-3 py-1 rounded-lg bg-stone-900 text-white font-bold text-xs">M</span>
+              </div>
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-stone-500">Estado actual:</span>
+                <span id="detail-status-text" class="font-semibold">Disponible</span>
+              </div>
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-stone-500">Código de prenda:</span>
+                <span id="detail-id" class="font-mono text-xs text-stone-600">#001</span>
+              </div>
+            </div>
+
+            <p class="mt-4 text-xs text-stone-500 leading-relaxed bg-stone-50 p-3 rounded-xl border border-stone-200/70">
+              Pieza única de <strong>La Ropa Americana</strong>. Todas nuestras prendas son revisadas cuidadosamente antes de publicarse.
+            </p>
+          </div>
+
+          <!-- WhatsApp Action Button -->
+          <div class="mt-6 pt-2">
+            <a
+              id="detail-whatsapp-btn"
+              href="#"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="w-full py-3.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-sm transition-all"
+            >
+              <i data-lucide="message-circle" class="w-5 h-5"></i>
+              <span>Pedir por WhatsApp</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       MODAL 2: ADMIN LOGIN MODAL (User: 123 / Pass: 123)
+  ====================================================================== -->
+  <div id="admin-login-modal" class="hidden fixed inset-0 z-50 bg-stone-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl border border-brand-border">
+      <div class="flex items-center justify-between mb-4">
+        <div class="w-10 h-10 rounded-xl bg-stone-900 text-white flex items-center justify-center">
+          <i data-lucide="shield-check" class="w-5 h-5"></i>
+        </div>
+        <button onclick="closeModal('admin-login-modal')" class="p-1.5 rounded-lg text-stone-400 hover:text-stone-700">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <h3 class="text-lg font-bold text-stone-900">Acceso Administrador</h3>
+      <p class="text-xs text-stone-500 mt-1 mb-5">Ingresa tus credenciales para gestionar La Ropa Americana.</p>
+
+      <form onsubmit="handleAdminLogin(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-stone-700 mb-1">Usuario</label>
+          <input
+            type="text"
+            id="login-user"
+            required
+            autocomplete="username"
+            placeholder="123"
+            class="w-full px-3.5 py-2.5 rounded-xl border border-brand-border text-sm focus:outline-none focus:border-stone-900"
+          />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-stone-700 mb-1">Contraseña</label>
+          <input
+            type="password"
+            id="login-pass"
+            required
+            autocomplete="current-password"
+            placeholder="•••"
+            class="w-full px-3.5 py-2.5 rounded-xl border border-brand-border text-sm focus:outline-none focus:border-stone-900"
+          />
+        </div>
+        <p id="login-error" class="hidden text-xs text-red-600 font-medium">
+          Usuario o contraseña incorrectos (Prueba con 123 / 123).
+        </p>
+        <button
+          type="submit"
+          class="w-full py-2.5 px-4 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-sm font-semibold transition-colors"
+        >
+          Entrar al Panel
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       MODAL 3: ADD / EDIT PRODUCT MODAL
+  ====================================================================== -->
+  <div id="product-form-modal" class="hidden fixed inset-0 z-50 bg-stone-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-white w-full sm:max-w-lg rounded-t-3xl sm:rounded-2xl p-6 shadow-2xl border border-brand-border max-h-[92vh] overflow-y-auto">
+      <div class="flex items-center justify-between mb-4">
+        <h3 id="product-form-title" class="text-lg font-bold text-stone-900">Nueva Prenda</h3>
+        <button onclick="closeModal('product-form-modal')" class="p-1.5 rounded-lg text-stone-400 hover:text-stone-700">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form onsubmit="handleSaveProduct(event)" class="space-y-4">
+        <input type="hidden" id="form-prod-id" />
+
+        <div>
+          <label class="block text-xs font-semibold text-stone-700 mb-1">Nombre / Título de la prenda *</label>
+          <input
+            type="text"
+            id="form-prod-title"
+            required
+            placeholder="Ej: Chaqueta Vintage Levi's"
+            class="w-full px-3.5 py-2.5 rounded-xl border border-brand-border text-sm focus:outline-none focus:border-stone-900"
+          />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-stone-700 mb-1">Categoría *</label>
+            <select
+              id="form-prod-category"
+              required
+              class="w-full px-3 py-2.5 rounded-xl border border-brand-border text-sm bg-white focus:outline-none focus:border-stone-900"
+            >
+              <!-- Populated dynamically -->
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-stone-700 mb-1">Precio ($) *</label>
+            <input
+              type="number"
+              id="form-prod-price"
+              required
+              min="0"
+              step="0.01"
+              placeholder="25"
+              class="w-full px-3.5 py-2.5 rounded-xl border border-brand-border text-sm focus:outline-none focus:border-stone-900"
+            />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-stone-700 mb-1">Talla *</label>
+            <input
+              type="text"
+              id="form-prod-size"
+              required
+              placeholder="S, M, L, XL, 32..."
+              class="w-full px-3.5 py-2.5 rounded-xl border border-brand-border text-sm focus:outline-none focus:border-stone-900"
+            />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-stone-700 mb-1">Estado *</label>
+            <select
+              id="form-prod-status"
+              required
+              class="w-full px-3 py-2.5 rounded-xl border border-brand-border text-sm bg-white focus:outline-none focus:border-stone-900"
+            >
+              <option value="Disponible">Disponible</option>
+              <option value="Reservado">Reservado</option>
+              <option value="Vendido">Vendido</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-stone-700 mb-1">Ruta de Foto o URL *</label>
+          <input
+            type="text"
+            id="form-prod-img"
+            required
+            placeholder="fotos/camiseta1.jpg o https://..."
+            class="w-full px-3.5 py-2.5 rounded-xl border border-brand-border text-sm font-mono text-xs focus:outline-none focus:border-stone-900"
+          />
+          <p class="text-[11px] text-stone-400 mt-1">
+            Si usas una carpeta local junto al HTML, escribe por ejemplo: <code class="text-stone-600">fotos/prenda1.jpg</code>
+          </p>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-brand-border">
+          <button
+            type="button"
+            onclick="closeModal('product-form-modal')"
+            class="px-4 py-2.5 rounded-xl border border-brand-border text-sm font-medium text-stone-600 hover:bg-stone-50"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            class="px-5 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-sm font-semibold"
+          >
+            Guardar Prenda
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       MODAL 4: CONFIRMATION MODAL (Replaces browser confirm())
+  ====================================================================== -->
+  <div id="confirm-modal" class="hidden fixed inset-0 z-50 bg-stone-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl border border-brand-border">
+      <h3 id="confirm-title" class="text-base font-bold text-stone-900">¿Confirmar acción?</h3>
+      <p id="confirm-message" class="text-xs text-stone-600 mt-1.5 mb-5">Esta acción no se puede deshacer.</p>
+      <div class="flex items-center justify-end gap-2">
+        <button
+          onclick="closeModal('confirm-modal')"
+          class="px-4 py-2 rounded-xl border border-brand-border text-xs font-semibold text-stone-600 hover:bg-stone-50"
+        >
+          Cancelar
+        </button>
+        <button
+          id="confirm-yes-btn"
+          class="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-semibold"
+        >
+          Sí, continuar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       JAVASCRIPT APPLICATION & SIMPLE DATA STRUCTURE
+  ====================================================================== -->
+  <script>
+    /**
+     * =========================================================================
+     * ZONA DE DATOS SIMPLES (ESTRUCTURA PLANA PARA VIBE-CODING / CARGA MASIVA)
+     * =========================================================================
+     * Agrega aquí tus prendas en bloque desde tu carpeta local (ej. "fotos/1.jpg").
+     * Estructura de cada objeto:
+     * { id, name, category, price, size, status, image }
+     *
+     * Valores válidos para status: "Disponible" | "Reservado" | "Vendido"
+     */
+
+    const WHATSAPP_NUMBER = "1234567890"; // Cambia esto por tu número con código de país (sin +)
+
+    const INITIAL_CATEGORIES = [
+      "Camisetas",
+      "Chaquetas",
+      "Pantalones",
+      "Vestidos",
+      "Accesorios"
+    ];
+
+    const INITIAL_PRODUCTS = [
+      { id: 1, name: "Chaqueta Denim Vintage 90s", category: "Chaquetas", price: 32, size: "L", status: "Disponible", image: "https://images.unsplash.com/photo-1576871337622-98d48d1cf531?auto=format&fit=crop&w=800&q=80" },
+      { id: 2, name: "Camiseta Gráfica Retro USA", category: "Camisetas", price: 15, size: "M", status: "Disponible", image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=800&q=80" },
+      { id: 3, name: "Pantalón Cargo Clásico Oliva", category: "Pantalones", price: 28, size: "32", status: "Reservado", image: "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?auto=format&fit=crop&w=800&q=80" },
+      { id: 4, name: "Vestido Floral Verano", category: "Vestidos", price: 24, size: "S", status: "Disponible", image: "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?auto=format&fit=crop&w=800&q=80" },
+      { id: 5, name: "Cazadora Bomber Universitaria", category: "Chaquetas", price: 38, size: "XL", status: "Disponible", image: "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=800&q=80" },
+      { id: 6, name: "Gorra Béisbol Vintage", category: "Accesorios", price: 12, size: "Única", status: "Vendido", image: "https://images.unsplash.com/photo-1588850561407-ed78c282e89b?auto=format&fit=crop&w=800&q=80" },
+      { id: 7, name: "Camiseta Oversize Algodón", category: "Camisetas", price: 16, size: "L", status: "Disponible", image: "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&w=800&q=80" },
+      { id: 8, name: "Jeans Rectos Azul Lavado", category: "Pantalones", price: 26, size: "30", status: "Disponible", image: "https://images.unsplash.com/photo-1542272604-787c3835535d?auto=format&fit=crop&w=800&q=80" }
+    ];
+
+    // =========================================================================
+    // ESTADO DE LA APLICACIÓN Y PERSISTENCIA EN LOCALSTORAGE
+    // =========================================================================
+    const STORAGE_KEYS = {
+      PRODUCTS: "la_ropa_americana_products_v2",
+      CATEGORIES: "la_ropa_americana_categories_v2",
+      ADMIN_AUTH: "la_ropa_americana_admin_auth"
+    };
+
+    let state = {
+      categories: [],
+      products: [],
+      selectedCategory: "Todos",
+      selectedStatus: "Todos",
+      searchQuery: "",
+      isAdminAuthenticated: false,
+      activeAdminTab: "products"
+    };
+
+    function loadState() {
+      try {
+        const savedCats = localStorage.getItem(STORAGE_KEYS.CATEGORIES);
+        const savedProds = localStorage.getItem(STORAGE_KEYS.PRODUCTS);
+        const savedAuth = sessionStorage.getItem(STORAGE_KEYS.ADMIN_AUTH);
+
+        state.categories = savedCats ? JSON.parse(savedCats) : [...INITIAL_CATEGORIES];
+        state.products = savedProds ? JSON.parse(savedProds) : [...INITIAL_PRODUCTS];
+        state.isAdminAuthenticated = savedAuth === "true";
+      } catch (err) {
+        console.error("Error cargando datos locales:", err);
+        state.categories = [...INITIAL_CATEGORIES];
+        state.products = [...INITIAL_PRODUCTS];
+      }
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(state.categories));
+        localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(state.products));
+      } catch (err) {
+        showToast("Memoria llena en navegador. Usa imágenes más ligeras o rutas locales.", "error");
+      }
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(state.categories));
+        localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(state.products));
+      } catch (err) {
+        showToast("No se pudo guardar en el almacenamiento local.", "error");
+      }
+    }
+
+    // =========================================================================
+    // UTILIDADES VISUALES (Fallbacks, Badges, Toasts)
+    // =========================================================================
+    function getFallbackImageUrl(title) {
+      const cleanText = encodeURIComponent(title || "La Ropa Americana");
+      return `https://placehold.co/600x750/EAE5DC/57534E?text=${cleanText}`;
+    }
+
+    function getStatusBadgeHTML(status) {
+      if (status === "Disponible") {
+        return `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80 shadow-2xs">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Disponible
+                </span>`;
+      }
+      if (status === "Reservado") {
+        return `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200/80 shadow-2xs">
+                  <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Reservado
+                </span>`;
+      }
+      return `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-stone-100 text-stone-600 border border-stone-200 shadow-2xs">
+                <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>Vendido
+              </span>`;
+    }
+
+    function showToast(message, type = "success") {
+      const container = document.getElementById("toast-container");
+      const toast = document.createElement("div");
+      const bgClass = type === "error" ? "bg-red-900 text-white" : "bg-stone-900 text-white";
+      const iconName = type === "error" ? "alert-circle" : "check-circle-2";
+
+      toast.className = `${bgClass} px-4 py-3 rounded-xl shadow-lg flex items-center gap-2.5 text-xs sm:text-sm font-medium pointer-events-auto transition-all duration-300 transform translate-y-2 opacity-0`;
+      toast.innerHTML = `<i data-lucide="${iconName}" class="w-4 h-4 shrink-0 text-amber-400"></i><span>${message}</span>`;
+
+      container.appendChild(toast);
+      lucide.createIcons({ root: toast });
+
+      requestAnimationFrame(() => {
+        toast.classList.remove("translate-y-2", "opacity-0");
+      });
+
+      setTimeout(() => {
+        toast.classList.add("opacity-0", "translate-y-2");
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    function openModal(id) {
+      document.getElementById(id).classList.remove("hidden");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.add("hidden");
+      document.body.style.overflow = "";
+    }
+
+    function askConfirmation(title, message, onConfirm) {
+      document.getElementById("confirm-title").textContent = title;
+      document.getElementById("confirm-message").textContent = message;
+      const yesBtn = document.getElementById("confirm-yes-btn");
+      yesBtn.onclick = () => {
+        closeModal("confirm-modal");
+        onConfirm();
+      };
+      openModal("confirm-modal");
+    }
+
+    // =========================================================================
+    // RENDERIZADO DE LA TIENDA (STOREFRONT)
+    // =========================================================================
+    function renderCategoryPills() {
+      const container = document.getElementById("category-pills");
+      const allCategories = ["Todos", ...state.categories];
+
+      container.innerHTML = allCategories.map(cat => {
+        const isActive = state.selectedCategory === cat;
+        const count = cat === "Todos"
+          ? state.products.length
+          : state.products.filter(p => p.category === cat).length;
+
+        const baseClasses = "shrink-0 px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5 cursor-pointer border";
+        const activeClasses = isActive
+          ? "bg-stone-900 text-white border-stone-900 shadow-xs"
+          : "bg-white text-stone-600 border-brand-border hover:border-stone-400 hover:text-stone-900";
+
+        return `
+          <button onclick="selectCategory('${cat.replace(/'/g, "\\'")}')" class="${baseClasses} ${activeClasses}">
+            <span>${cat}</span>
+            <span class="text-[11px] px-1.5 py-0.2 rounded-full ${isActive ? 'bg-stone-700 text-stone-200' : 'bg-stone-100 text-stone-500'}">${count}</span>
+          </button>
+        `;
+      }).join("");
+    }
+
+    function getFilteredProducts() {
+      return state.products.filter(product => {
+        const matchesCategory = state.selectedCategory === "Todos" || product.category === state.selectedCategory;
+        const matchesStatus = state.selectedStatus === "Todos" || product.status === state.selectedStatus;
+        const query = state.searchQuery.trim().toLowerCase();
+        const matchesSearch = !query ||
+          product.name.toLowerCase().includes(query) ||
+          product.category.toLowerCase().includes(query) ||
+          product.size.toLowerCase().includes(query);
+
+        return matchesCategory && matchesStatus && matchesSearch;
+      });
+    }
+
+    function renderProductGrid() {
+      const grid = document.getElementById("product-grid");
+      const emptyState = document.getElementById("empty-state");
+      const headerCount = document.getElementById("header-count");
+      const filtered = getFilteredProducts();
+
+      headerCount.textContent = `${filtered.length} ${filtered.length === 1 ? 'prenda' : 'prendas'}`;
+
+      if (filtered.length === 0) {
+        grid.innerHTML = "";
+        emptyState.classList.remove("hidden");
+        return;
+      }
+
+      emptyState.classList.add("hidden");
+      grid.innerHTML = filtered.map(product => {
+        const isSold = product.status === "Vendido";
+        const fallback = getFallbackImageUrl(product.name);
+
+        return `
+          <article
+            onclick="openProductDetail(${product.id})"
+            class="group bg-white rounded-2xl border border-brand-border overflow-hidden shadow-2xs hover:shadow-md hover:border-stone-300 transition-all duration-200 flex flex-col cursor-pointer"
+          >
+            <!-- Image Container -->
+            <div class="relative aspect-[4/5] bg-stone-100 overflow-hidden">
+              <img
+                src="${product.image}"
+                alt="${product.name}"
+                loading="lazy"
+                onerror="this.onerror=null; this.src='${fallback}';"
+                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ${isSold ? 'opacity-65 grayscale-[30%]' : ''}"
+              />
+              <!-- Status Badge Top-Left -->
+              <div class="absolute top-2.5 left-2.5">
+                ${getStatusBadgeHTML(product.status)}
+              </div>
+              <!-- Size Badge Bottom-Right -->
+              <div class="absolute bottom-2.5 right-2.5">
+                <span class="px-2.5 py-1 rounded-lg bg-stone-900/90 backdrop-blur-xs text-white text-xs font-bold tracking-wide shadow-xs">
+                  Talla ${product.size}
+                </span>
+              </div>
+            </div>
+
+            <!-- Card Body -->
+            <div class="p-3.5 sm:p-4 flex-1 flex flex-col justify-between">
+              <div>
+                <p class="text-[11px] font-semibold uppercase tracking-wider text-stone-400">
+                  ${product.category}
+                </p>
+                <h2 class="text-sm sm:text-base font-semibold text-stone-900 mt-0.5 line-clamp-2 group-hover:text-amber-800 transition-colors">
+                  ${product.name}
+                </h2>
+              </div>
+
+              <div class="mt-3 pt-2.5 border-t border-stone-100 flex items-center justify-between">
+                <span class="text-base sm:text-lg font-bold text-stone-900">
+                  $${Number(product.price).toFixed(2).replace(/\.00$/, '')}
+                </span>
+                <span class="text-xs font-medium text-stone-500 group-hover:text-stone-900 flex items-center gap-1 transition-colors">
+                  <span>Ver</span>
+                  <i data-lucide="arrow-up-right" class="w-3.5 h-3.5"></i>
+                </span>
+              </div>
+            </div>
+          </article>
+        `;
+      }).join("");
+
+      lucide.createIcons({ root: grid });
+    }
+
+    // =========================================================================
+    // INTERACCIONES DE FILTRADO Y DETALLE DE PRODUCTO
+    // =========================================================================
+    function selectCategory(category) {
+      state.selectedCategory = category;
+      renderCategoryPills();
+      renderProductGrid();
+    }
+
+    function handleStatusFilter(status) {
+      state.selectedStatus = status;
+      renderProductGrid();
+    }
+
+    function handleSearch(val) {
+      state.searchQuery = val;
+      const clearBtn = document.getElementById("clear-search-btn");
+      if (val.trim().length > 0) {
+        clearBtn.classList.remove("hidden");
+      } else {
+        clearBtn.classList.add("hidden");
+      }
+      renderProductGrid();
+    }
+
+    function clearSearch() {
+      const input = document.getElementById("search-input");
+      input.value = "";
+      handleSearch("");
+      input.focus();
+    }
+
+    function resetFilters(e) {
+      if (e) e.preventDefault();
+      state.selectedCategory = "Todos";
+      state.selectedStatus = "Todos";
+      state.searchQuery = "";
+      document.getElementById("search-input").value = "";
+      document.getElementById("status-filter").value = "Todos";
+      document.getElementById("clear-search-btn").classList.add("hidden");
+      exitAdminView();
+      renderStorefront();
+    }
+
+    function openProductDetail(productId) {
+      const product = state.products.find(p => p.id === productId);
+      if (!product) return;
+
+      const imgEl = document.getElementById("detail-img");
+      imgEl.src = product.image;
+      imgEl.alt = product.name;
+      imgEl.onerror = function() {
+        this.onerror = null;
+        this.src = getFallbackImageUrl(product.name);
+      };
+
+      document.getElementById("detail-category-badge").textContent = product.category;
+      document.getElementById("detail-title").textContent = product.name;
+      document.getElementById("detail-price").textContent = `$${Number(product.price).toFixed(2).replace(/\.00$/, '')}`;
+      document.getElementById("detail-size").textContent = product.size;
+      document.getElementById("detail-id").textContent = `#${String(product.id).padStart(3, '0')}`;
+      document.getElementById("detail-status-overlay").innerHTML = getStatusBadgeHTML(product.status);
+
+      const statusTextEl = document.getElementById("detail-status-text");
+      statusTextEl.textContent = product.status;
+      statusTextEl.className = product.status === "Disponible"
+        ? "font-semibold text-emerald-700"
+        : product.status === "Reservado"
+          ? "font-semibold text-amber-700"
+          : "font-semibold text-red-600";
+
+      // WhatsApp link pre-filled in Spanish
+      const waBtn = document.getElementById("detail-whatsapp-btn");
+      if (product.status === "Vendido") {
+        waBtn.classList.add("opacity-50", "pointer-events-none", "bg-stone-400");
+        waBtn.classList.remove("bg-emerald-600", "hover:bg-emerald-700");
+        waBtn.innerHTML = `<i data-lucide="x-circle" class="w-5 h-5"></i><span>Prenda Vendida</span>`;
+      } else {
+        waBtn.classList.remove("opacity-50", "pointer-events-none", "bg-stone-400");
+        waBtn.classList.add("bg-emerald-600", "hover:bg-emerald-700");
+        waBtn.innerHTML = `<i data-lucide="message-circle" class="w-5 h-5"></i><span>Consultar / Pedir por WhatsApp</span>`;
+        const msg = encodeURIComponent(
+          `¡Hola! Me interesa esta prenda de *La Ropa Americana*:\n• *${product.name}*\n• Categoría: ${product.category}\n• Talla: ${product.size}\n• Precio: $${product.price}`
+        );
+        waBtn.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`;
+      }
+
+      lucide.createIcons({ root: document.getElementById("product-detail-modal") });
+      openModal("product-detail-modal");
+    }
+
+    // =========================================================================
+    // SUBIDA DE MÚLTIPLES FOTOS Y CREACIÓN AUTOMÁTICA DE SLOTS
+    // =========================================================================
+    function handleDragOver(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      document.getElementById("photo-dropzone").classList.add("border-amber-600", "bg-amber-50/60");
+    }
+
+    function handleDragLeave(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      document.getElementById("photo-dropzone").classList.remove("border-amber-600", "bg-amber-50/60");
+    }
+
+    function handleFileDrop(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      document.getElementById("photo-dropzone").classList.remove("border-amber-600", "bg-amber-50/60");
+      const files = e.dataTransfer?.files;
+      if (files && files.length > 0) {
+        createSlotsFromFiles(files);
+      }
+    }
+
+    function handlePhotoFilesSelected(e) {
+      const files = e.target.files;
+      if (files && files.length > 0) {
+        createSlotsFromFiles(files);
+        e.target.value = "";
+      }
+    }
+
+    // Compress image slightly via Canvas so multiple photos fit smoothly in localStorage
+    function readAndOptimizeImage(file) {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const img = new Image();
+          img.onload = () => {
+            const maxDim = 900;
+            let width = img.width;
+            let height = img.height;
+
+            if (width > maxDim || height > maxDim) {
+              if (width > height) {
+                height = Math.round((height * maxDim) / width);
+                width = maxDim;
+              } else {
+                width = Math.round((width * maxDim) / height);
+                height = maxDim;
+              }
+            }
+
+            const canvas = document.createElement("canvas");
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL("image/jpeg", 0.82));
+          };
+          img.onerror = () => resolve(event.target.result);
+          img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function createSlotsFromFiles(fileList) {
+      const imageFiles = Array.from(fileList).filter(f => f.type.startsWith("image/"));
+      if (imageFiles.length === 0) {
+        showToast("Selecciona archivos de imagen válidos", "error");
+        return;
+      }
+
+      const defaultCat = document.getElementById("upload-default-category").value || state.categories[0] || "Camisetas";
+      let nextId = state.products.length > 0 ? Math.max(...state.products.map(p => p.id)) + 1 : 1;
+
+      for (const file of imageFiles) {
+        const optimizedDataUrl = await readAndOptimizeImage(file);
+        const cleanName = file.name
+          .replace(/\.[^/.]+$/, "")
+          .replace(/[-_]+/g, " ")
+          .replace(/\b\w/g, c => c.toUpperCase())
+          .trim() || "Nueva prenda";
+
+        state.products.unshift({
+          id: nextId++,
+          name: cleanName,
+          category: defaultCat,
+          price: 0,
+          size: "M",
+          status: "Disponible",
+          image: optimizedDataUrl
+        });
+      }
+
+      saveState();
+      renderAdminProducts();
+      showToast(
+        imageFiles.length === 1
+          ? "1 slot creado. Edita su precio y talla abajo."
+          : `${imageFiles.length} slots creados. Configura sus datos abajo.`
+      );
+    }
+
+    // =========================================================================
+    // CRUD E EDICIÓN RÁPIDA DE SLOTS DE PRENDAS (ADMIN)
+    // =========================================================================
+    function renderAdminProducts() {
+      const grid = document.getElementById("admin-products-grid");
+      const defaultCatSelect = document.getElementById("upload-default-category");
+      document.getElementById("admin-prod-count").textContent = state.products.length;
+
+      const currentDefaultCat = defaultCatSelect.value;
+      defaultCatSelect.innerHTML = state.categories
+        .map(c => `<option value="${c}" ${c === currentDefaultCat ? "selected" : ""}>Categoría: ${c}</option>`)
+        .join("");
+
+      if (state.products.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full py-12 px-4 text-center bg-white rounded-2xl border border-brand-border text-stone-400 text-sm">
+            No hay prendas registradas. Sube fotos arriba o crea un slot manual.
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = state.products.map(p => {
+        const fallback = getFallbackImageUrl(p.name);
+        const catOptions = state.categories
+          .map(c => `<option value="${c}" ${c === p.category ? "selected" : ""}>${c}</option>`)
+          .join("");
+
+        return `
+          <div class="bg-white rounded-2xl border border-brand-border overflow-hidden shadow-2xs flex flex-col">
+            <!-- Top Preview & Quick Actions -->
+            <div class="flex gap-3 p-3.5 border-b border-stone-100 bg-stone-50/50">
+              <img
+                src="${p.image}"
+                alt="${p.name}"
+                onerror="this.onerror=null; this.src='${fallback}';"
+                class="w-16 h-20 rounded-xl object-cover bg-stone-100 border border-brand-border shrink-0"
+              />
+              <div class="flex-1 min-w-0 flex flex-col justify-between">
+                <div>
+                  <div class="flex items-center justify-between gap-1">
+                    <span class="text-[11px] font-mono text-stone-400">#${String(p.id).padStart(3, "0")}</span>
+                    <div class="flex items-center gap-1">
+                      <button
+                        onclick="openProductFormModal(${p.id})"
+                        title="Cambiar foto o ruta"
+                        class="p-1.5 rounded-lg text-stone-500 hover:text-stone-900 hover:bg-stone-200/70 transition-colors"
+                      >
+                        <i data-lucide="image" class="w-3.5 h-3.5"></i>
+                      </button>
+                      <button
+                        onclick="deleteProduct(${p.id})"
+                        title="Eliminar slot"
+                        class="p-1.5 rounded-lg text-red-500 hover:text-red-700 hover:bg-red-50 transition-colors"
+                      >
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <input
+                    type="text"
+                    value="${p.name.replace(/"/g, "&quot;")}"
+                    onchange="updateProductField(${p.id}, 'name', this.value)"
+                    placeholder="Nombre de la prenda"
+                    class="w-full mt-1 px-2.5 py-1.5 rounded-lg border border-brand-border bg-white text-xs sm:text-sm font-semibold text-stone-900 focus:outline-none focus:border-stone-900"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Inline Editable Fields (Category, Price, Size, Status) -->
+            <div class="p-3.5 grid grid-cols-2 gap-2.5 text-xs">
+              <div>
+                <label class="block text-[10px] font-semibold uppercase tracking-wider text-stone-400 mb-1">Categoría</label>
+                <select
+                  onchange="updateProductField(${p.id}, 'category', this.value)"
+                  class="w-full px-2.5 py-2 rounded-xl border border-brand-border bg-white font-medium text-stone-800 focus:outline-none focus:border-stone-900"
+                >
+                  ${catOptions}
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-[10px] font-semibold uppercase tracking-wider text-stone-400 mb-1">Precio ($)</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value="${p.price}"
+                  onchange="updateProductField(${p.id}, 'price', parseFloat(this.value) || 0)"
+                  class="w-full px-2.5 py-2 rounded-xl border border-brand-border bg-white font-bold text-stone-900 focus:outline-none focus:border-stone-900"
+                />
+              </div>
+
+              <div>
+                <label class="block text-[10px] font-semibold uppercase tracking-wider text-stone-400 mb-1">Talla</label>
+                <input
+                  type="text"
+                  value="${p.size.replace(/"/g, "&quot;")}"
+                  onchange="updateProductField(${p.id}, 'size', this.value)"
+                  placeholder="S, M, L, 32..."
+                  class="w-full px-2.5 py-2 rounded-xl border border-brand-border bg-white font-semibold text-stone-800 focus:outline-none focus:border-stone-900"
+                />
+              </div>
+
+              <div>
+                <label class="block text-[10px] font-semibold uppercase tracking-wider text-stone-400 mb-1">Estado</label>
+                <select
+                  onchange="updateProductField(${p.id}, 'status', this.value)"
+                  class="w-full px-2.5 py-2 rounded-xl border border-brand-border bg-white font-semibold text-stone-800 focus:outline-none focus:border-stone-900"
+                >
+                  <option value="Disponible" ${p.status === "Disponible" ? "selected" : ""}>Disponible</option>
+                  <option value="Reservado" ${p.status === "Reservado" ? "selected" : ""}>Reservado</option>
+                  <option value="Vendido" ${p.status === "Vendido" ? "selected" : ""}>Vendido</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      lucide.createIcons({ root: grid });
+    }
+
+    function updateProductField(productId, field, value) {
+      const product = state.products.find(p => p.id === productId);
+      if (!product) return;
+
+      if (typeof value === "string") {
+        value = value.trim();
+        if ((field === "name" || field === "size") && !value) {
+          renderAdminProducts();
+          return;
+        }
+      }
+
+      product[field] = value;
+      saveState();
+      showToast("Cambios guardados");
+    }
+
+    function openProductFormModal(productId = null) {
+      const catSelect = document.getElementById("form-prod-category");
+      catSelect.innerHTML = state.categories.map(c => `<option value="${c}">${c}</option>`).join("");
+
+      if (productId) {
+        const product = state.products.find(p => p.id === productId);
+        if (!product) return;
+        document.getElementById("product-form-title").textContent = "Editar Prenda / Ruta de Foto";
+        document.getElementById("form-prod-id").value = product.id;
+        document.getElementById("form-prod-title").value = product.name;
+        document.getElementById("form-prod-category").value = state.categories.includes(product.category)
+          ? product.category
+          : (state.categories[0] || "");
+        document.getElementById("form-prod-price").value = product.price;
+        document.getElementById("form-prod-size").value = product.size;
+        document.getElementById("form-prod-status").value = product.status;
+        document.getElementById("form-prod-img").value = product.image;
+      } else {
+        document.getElementById("product-form-title").textContent = "Nuevo Slot Manual";
+        document.getElementById("form-prod-id").value = "";
+        document.getElementById("form-prod-title").value = "";
+        document.getElementById("form-prod-category").value = state.categories[0] || "";
+        document.getElementById("form-prod-price").value = "0";
+        document.getElementById("form-prod-size").value = "M";
+        document.getElementById("form-prod-status").value = "Disponible";
+        document.getElementById("form-prod-img").value = "fotos/";
+      }
+
+      openModal("product-form-modal");
+    }
+
+    function handleSaveProduct(e) {
+      e.preventDefault();
+      const idVal = document.getElementById("form-prod-id").value;
+      const name = document.getElementById("form-prod-title").value.trim();
+      const category = document.getElementById("form-prod-category").value;
+      const price = parseFloat(document.getElementById("form-prod-price").value) || 0;
+      const size = document.getElementById("form-prod-size").value.trim();
+      const status = document.getElementById("form-prod-status").value;
+      const image = document.getElementById("form-prod-img").value.trim();
+
+      if (idVal) {
+        const idx = state.products.findIndex(p => p.id === Number(idVal));
+        if (idx !== -1) {
+          state.products[idx] = { id: Number(idVal), name, category, price, size, status, image };
+          showToast("Prenda actualizada correctamente");
+        }
+      } else {
+        const nextId = state.products.length > 0 ? Math.max(...state.products.map(p => p.id)) + 1 : 1;
+        state.products.unshift({ id: nextId, name, category, price, size, status, image });
+        showToast("Nuevo slot agregado al catálogo");
+      }
+
+      saveState();
+      closeModal("product-form-modal");
+      renderAdminProducts();
+    }
+
+    function deleteProduct(productId) {
+      const product = state.products.find(p => p.id === productId);
+      if (!product) return;
+
+      askConfirmation(
+        "Eliminar prenda",
+        `¿Seguro que deseas eliminar "${product.name}" del inventario?`,
+        () => {
+          state.products = state.products.filter(p => p.id !== productId);
+          saveState();
+          renderAdminProducts();
+          showToast("Prenda eliminada");
+        }
+      );
+    }
+
+    // =========================================================================
+    // CRUD DE CATEGORÍAS (ADMIN)
+    // =========================================================================
+    function renderAdminCategories() {
+      const list = document.getElementById("admin-categories-list");
+      document.getElementById("admin-cat-count").textContent = state.categories.length;
+
+      list.innerHTML = state.categories.map((cat, index) => {
+        const itemCount = state.products.filter(p => p.category === cat).length;
+        return `
+          <li class="px-5 py-3.5 flex items-center justify-between gap-3 hover:bg-stone-50/70 transition-colors">
+            <div class="flex items-center gap-3 flex-1 min-w-0" id="cat-display-${index}">
+              <span class="w-8 h-8 rounded-lg bg-stone-100 text-stone-600 flex items-center justify-center shrink-0">
+                <i data-lucide="folder" class="w-4 h-4"></i>
+              </span>
+              <div class="min-w-0">
+                <p class="text-sm font-semibold text-stone-900 truncate">${cat}</p>
+                <p class="text-xs text-stone-400">${itemCount} ${itemCount === 1 ? 'prenda asignada' : 'prendas asignadas'}</p>
+              </div>
+            </div>
+
+            <!-- Inline Edit Form (Hidden by default) -->
+            <div class="hidden flex-1 flex items-center gap-2" id="cat-edit-${index}">
+              <input
+                type="text"
+                id="cat-edit-input-${index}"
+                value="${cat}"
+                class="flex-1 px-3 py-1.5 rounded-lg border border-stone-900 text-sm focus:outline-none"
+              />
+              <button
+                onclick="saveEditedCategory(${index})"
+                class="px-3 py-1.5 rounded-lg bg-stone-900 text-white text-xs font-semibold"
+              >
+                Guardar
+              </button>
+              <button
+                onclick="cancelEditCategory(${index})"
+                class="px-2.5 py-1.5 rounded-lg border border-brand-border text-xs text-stone-600"
+              >
+                Cancelar
+              </button>
+            </div>
+
+            <div class="flex items-center gap-1" id="cat-actions-${index}">
+              <button
+                onclick="startEditCategory(${index})"
+                title="Renombrar categoría"
+                class="p-2 rounded-lg text-stone-600 hover:text-stone-900 hover:bg-stone-200/70 transition-colors"
+              >
+                <i data-lucide="pencil" class="w-4 h-4"></i>
+              </button>
+              <button
+                onclick="deleteCategory(${index})"
+                title="Eliminar categoría"
+                class="p-2 rounded-lg text-red-500 hover:text-red-700 hover:bg-red-50 transition-colors"
+              >
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </li>
+        `;
+      }).join("");
+
+      lucide.createIcons({ root: list });
+    }
+
+    function handleAddCategory(e) {
+      e.preventDefault();
+      const input = document.getElementById("new-category-input");
+      const newName = input.value.trim();
+      if (!newName) return;
+
+      if (state.categories.some(c => c.toLowerCase() === newName.toLowerCase())) {
+        showToast("Esa categoría ya existe", "error");
+        return;
+      }
+
+      state.categories.push(newName);
+      saveState();
+      input.value = "";
+      renderAdminCategories();
+      showToast(`Categoría "${newName}" creada`);
+    }
+
+    function startEditCategory(index) {
+      document.getElementById(`cat-display-${index}`).classList.add("hidden");
+      document.getElementById(`cat-actions-${index}`).classList.add("hidden");
+      document.getElementById(`cat-edit-${index}`).classList.remove("hidden");
+      document.getElementById(`cat-edit-input-${index}`).focus();
+    }
+
+    function cancelEditCategory(index) {
+      document.getElementById(`cat-display-${index}`).classList.remove("hidden");
+      document.getElementById(`cat-actions-${index}`).classList.remove("hidden");
+      document.getElementById(`cat-edit-${index}`).classList.add("hidden");
+    }
+
+    function saveEditedCategory(index) {
+      const oldName = state.categories[index];
+      const newName = document.getElementById(`cat-edit-input-${index}`).value.trim();
+
+      if (!newName) return;
+      if (newName !== oldName && state.categories.some(c => c.toLowerCase() === newName.toLowerCase())) {
+        showToast("Ya existe una categoría con ese nombre", "error");
+        return;
+      }
+
+      state.categories[index] = newName;
+      // Update products belonging to the renamed category
+      state.products.forEach(p => {
+        if (p.category === oldName) p.category = newName;
+      });
+      if (state.selectedCategory === oldName) {
+        state.selectedCategory = newName;
+      }
+
+      saveState();
+      renderAdminCategories();
+      renderAdminProducts();
+      showToast(`Categoría actualizada a "${newName}"`);
+    }
+
+    function deleteCategory(index) {
+      if (state.categories.length <= 1) {
+        showToast("Debe existir al menos una categoría", "error");
+        return;
+      }
+
+      const catToDelete = state.categories[index];
+      const fallbackCat = state.categories.find((_, i) => i !== index);
+      const affectedCount = state.products.filter(p => p.category === catToDelete).length;
+
+      askConfirmation(
+        `Eliminar "${catToDelete}"`,
+        affectedCount > 0
+          ? `Hay ${affectedCount} prendas en esta categoría. Se moverán automáticamente a "${fallbackCat}".`
+          : `¿Deseas eliminar la categoría "${catToDelete}"?`,
+        () => {
+          state.categories.splice(index, 1);
+          state.products.forEach(p => {
+            if (p.category === catToDelete) p.category = fallbackCat;
+          });
+          if (state.selectedCategory === catToDelete) {
+            state.selectedCategory = "Todos";
+          }
+          saveState();
+          renderAdminCategories();
+          renderAdminProducts();
+          showToast(`Categoría "${catToDelete}" eliminada`);
+        }
+      );
+    }
+
+    function resetToDefaultData() {
+      askConfirmation(
+        "Sincronizar con el archivo HTML",
+        "Se recargarán las categorías y prendas definidas en INITIAL_PRODUCTS dentro del código fuente (se perderán las ediciones locales del navegador).",
+        () => {
+          localStorage.removeItem(STORAGE_KEYS.PRODUCTS);
+          localStorage.removeItem(STORAGE_KEYS.CATEGORIES);
+          state.categories = [...INITIAL_CATEGORIES];
+          state.products = [...INITIAL_PRODUCTS];
+          renderAdminPanel();
+          showToast("Datos sincronizados con el código fuente");
+        }
+      );
+    }
+
+    // =========================================================================
+    // INICIALIZACIÓN GLOBAL
+    // =========================================================================
+    function renderStorefront() {
+      renderCategoryPills();
+      renderProductGrid();
+    }
+
+    function renderAdminPanel() {
+      renderAdminProducts();
+      renderAdminCategories();
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      loadState();
+      updateAdminHeaderIndicator();
+      renderStorefront();
+      lucide.createIcons();
+    });
+  </script>
+</body>
+</html>
