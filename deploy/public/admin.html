@@ -97,6 +97,24 @@
     .empty-state { text-align: center; padding: 3rem; color: #888; }
     .empty-state svg { width: 64px; height: 64px; margin-bottom: 1rem; opacity: 0.5; }
 
+    /* Import Drop Zone */
+    .drop-zone {
+      border: 2px dashed #ddd;
+      border-radius: 12px;
+      padding: 3rem 2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: #fafafa;
+    }
+    .drop-zone:hover, .drop-zone.drag-over {
+      border-color: #c62828;
+      background: #fef2f2;
+    }
+    .drop-zone.drag-over {
+      transform: scale(1.01);
+    }
+
     /* Responsive */
     @media (max-width: 768px) {
       .sidebar { transform: translateX(-100%); transition: transform 0.3s; }
@@ -147,6 +165,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
           Productos
         </a>
+        <a href="#" class="nav-item" data-page="import">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+          Importación masiva
+        </a>
         <a href="#" class="nav-item" data-page="categories">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h7"></path></svg>
           Categorías
@@ -186,6 +208,69 @@
         <div class="empty-state" id="productsEmpty" style="display:none;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
           <p>No hay productos. Haz clic en "Nuevo Producto" para agregar uno.</p>
+        </div>
+      </section>
+
+      <!-- Import Page -->
+      <section class="page" id="page-import">
+        <div class="page-header">
+          <h1>Importación masiva de fotos</h1>
+        </div>
+        
+        <div class="form-section" style="max-width: 900px;">
+          <h3>Cómo funciona</h3>
+          <p style="color: #666; margin-bottom: 1.5rem; font-size: 0.9rem; line-height: 1.7;">
+            1. Organiza tus fotos en carpetas por categoría en tu computadora<br>
+            2. Arrastra la carpeta principal aquí o haz clic para seleccionar archivos<br>
+            3. El sistema detectará la categoría por el nombre de la carpeta<br>
+            4. Creará productos automáticamente (nombre = archivo, precio = 0, talla = M, estado = activo)<br>
+            5. Luego solo editas precio y talla en la tabla de productos
+          </p>
+          
+          <div class="drop-zone" id="dropZone">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 1rem; opacity: 0.5;">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+            <p style="font-size: 1.1rem; font-weight: 500; margin-bottom: 0.5rem;">Arrastra una carpeta aquí</p>
+            <p style="color: #888; font-size: 0.9rem;">o haz clic para seleccionar archivos (múltiples)</p>
+            <input type="file" id="folderInput" webkitdirectory directory multiple accept="image/*" style="display: none;">
+          </div>
+          
+          <div id="importPreview" style="display: none; margin-top: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+              <h4 style="margin: 0;">Vista previa de importación</h4>
+              <span id="importCount" style="color: #666; font-size: 0.9rem; font-weight: normal;"></span>
+            </div>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th style="width: 80px;">Imagen</th>
+                    <th>Nombre (archivo)</th>
+                    <th>Categoría detectada</th>
+                    <th style="width: 100px;">Precio</th>
+                    <th style="width: 100px;">Talla</th>
+                  </tr>
+                </thead>
+                <tbody id="importPreviewBody"></tbody>
+              </table>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1rem;">
+              <button class="btn btn-secondary" id="cancelImportBtn">Cancelar</button>
+              <button class="btn btn-primary" id="confirmImportBtn">Importar todo</button>
+            </div>
+          </div>
+          
+          <div id="importProgress" style="display: none; margin-top: 1.5rem;">
+            <div style="background: #f5f5f5; border-radius: 4px; height: 8px; overflow: hidden;">
+              <div id="progressBar" style="background: #c62828; height: 100%; width: 0%; transition: width 0.3s;"></div>
+            </div>
+            <p id="progressText" style="margin-top: 0.5rem; color: #666; font-size: 0.9rem;"></p>
+          </div>
+          
+          <div id="importResult" style="display: none; margin-top: 1.5rem; padding: 1rem; background: #e8f5e9; border-radius: 8px;"></div>
         </div>
       </section>
 
@@ -340,6 +425,22 @@
     const categoryForm = document.getElementById('categoryForm');
     const closeCategoryModal = document.getElementById('closeCategoryModal');
     const cancelCategoryModal = document.getElementById('cancelCategoryModal');
+
+    // Import elements
+    const dropZone = document.getElementById('dropZone');
+    const folderInput = document.getElementById('folderInput');
+    const importPreview = document.getElementById('importPreview');
+    const importPreviewBody = document.getElementById('importPreviewBody');
+    const importCount = document.getElementById('importCount');
+    const cancelImportBtn = document.getElementById('cancelImportBtn');
+    const confirmImportBtn = document.getElementById('confirmImportBtn');
+    const importProgress = document.getElementById('importProgress');
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+    const importResult = document.getElementById('importResult');
+
+    let importFiles = [];
+    let importQueue = [];
 
     // API helper
     async function api(path, options = {}) {
@@ -654,6 +755,222 @@
       modal.addEventListener('click', (e) => {
         if (e.target === modal) modal.classList.remove('visible');
       });
+    });
+
+    // ===== IMPORT FUNCTIONALITY =====
+    function matchCategory(fileName, folderName) {
+      const folderLower = folderName.toLowerCase();
+      const nameLower = fileName.toLowerCase();
+      
+      // Direct category match
+      for (const cat of categories) {
+        if (folderLower.includes(cat.name.toLowerCase()) || 
+            folderLower.includes(cat.display_name.toLowerCase())) {
+          return cat.id;
+        }
+      }
+      // Keyword matching
+      const keywords = {
+        'camisetas': ['camiseta', 'tshirt', 'tee', 'shirt', 'top'],
+        'pantalones': ['pantalon', 'pants', 'jean', 'jean', 'trouser', 'leggings'],
+        'vestidos': ['vestido', 'dress', 'faldas', 'skirt'],
+        'chaquetas': ['chaqueta', 'jacket', 'blazer', 'coat', 'abrigo'],
+        'accesorios': ['accesorio', 'accessory', 'bolso', 'bag', 'cinturon', 'belt', 'gorra', 'cap', 'sombrero']
+      };
+      
+      for (const [catName, keys] of Object.entries(keywords)) {
+        if (keys.some(k => folderLower.includes(k) || nameLower.includes(k))) {
+          const cat = categories.find(c => c.name === catName);
+          if (cat) return cat.id;
+        }
+      }
+      return categories[0]?.id || null;
+    }
+
+    function formatFileName(fileName) {
+      return fileName
+        .replace(/\.[^/.]+$/, '') // remove extension
+        .replace(/[-_]/g, ' ')
+        .replace(/\b\w/g, l => l.toUpperCase());
+    }
+
+    // Drop zone events
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+      dropZone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      });
+    });
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+      dropZone.addEventListener(eventName, () => dropZone.classList.add('drag-over'));
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+      dropZone.addEventListener(eventName, () => dropZone.classList.remove('drag-over'));
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+      handleFiles(files);
+    });
+
+    dropZone.addEventListener('click', () => folderInput.click());
+
+    folderInput.addEventListener('change', (e) => {
+      const files = Array.from(e.target.files).filter(f => f.type.startsWith('image/'));
+      handleFiles(files);
+    });
+
+    function handleFiles(files) {
+      if (!files.length) return;
+      
+      importFiles = files;
+      importQueue = files.map(file => {
+        // Get folder name from webkitRelativePath or use root
+        const relativePath = file.webkitRelativePath || file.name;
+        const folderName = relativePath.split('/')[0] || 'general';
+        
+        return {
+          file,
+          fileName: file.name,
+          displayName: formatFileName(file.name),
+          folderName,
+          categoryId: matchCategory(file.name, folderName),
+          price: 0,
+          size: 'M',
+          preview: URL.createObjectURL(file)
+        };
+      });
+      
+      renderImportPreview();
+      importPreview.style.display = 'block';
+      importProgress.style.display = 'none';
+      importResult.style.display = 'none';
+    }
+
+    function renderImportPreview() {
+      importCount.textContent = `${importQueue.length} archivos`;
+      importPreviewBody.innerHTML = importQueue.map((item, index) => {
+        const cat = categories.find(c => c.id === item.categoryId);
+        const catName = cat ? cat.display_name : 'Sin categoría';
+        const catId = item.categoryId || '';
+        
+        return `
+          <tr data-index="${index}">
+            <td>
+              <img src="${item.preview}" alt="${item.fileName}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px;">
+            </td>
+            <td>
+              <input type="text" value="${item.displayName}" data-field="displayName" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.9rem;">
+            </td>
+            <td>
+              <select data-field="categoryId" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.9rem;">
+                ${categories.map(c => `<option value="${c.id}" ${c.id === item.categoryId ? 'selected' : ''}>${c.display_name}</option>`).join('')}
+              </select>
+            </td>
+            <td>
+              <input type="number" value="${item.price}" data-field="price" step="0.01" min="0" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.9rem;">
+            </td>
+            <td>
+              <select data-field="size" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.9rem;">
+                <option value="XS" ${item.size === 'XS' ? 'selected' : ''}>XS</option>
+                <option value="S" ${item.size === 'S' ? 'selected' : ''}>S</option>
+                <option value="M" ${item.size === 'M' ? 'selected' : ''}>M</option>
+                <option value="L" ${item.size === 'L' ? 'selected' : ''}>L</option>
+                <option value="XL" ${item.size === 'XL' ? 'selected' : ''}>XL</option>
+                <option value="XXL" ${item.size === 'XXL' ? 'selected' : ''}>XXL</option>
+                <option value="Única" ${item.size === 'Única' ? 'selected' : ''}>Única</option>
+              </select>
+            </td>
+          </tr>
+        `;
+      }).join('');
+      
+      // Add change listeners
+      importPreviewBody.querySelectorAll('input, select').forEach(el => {
+        el.addEventListener('change', (e) => {
+          const row = e.target.closest('tr');
+          const index = parseInt(row.dataset.index);
+          const field = e.target.dataset.field;
+          importQueue[index][field] = e.target.type === 'number' ? parseFloat(e.target.value) : e.target.value;
+        });
+      });
+    }
+
+    cancelImportBtn.addEventListener('click', () => {
+      importFiles = [];
+      importQueue = [];
+      importPreview.style.display = 'none';
+      folderInput.value = '';
+      importPreviewBody.innerHTML = '';
+      // Revoke object URLs
+      importQueue.forEach(item => URL.revokeObjectURL(item.preview));
+    });
+
+    confirmImportBtn.addEventListener('click', async () => {
+      if (!importQueue.length) return;
+      
+      importPreview.style.display = 'none';
+      importProgress.style.display = 'block';
+      progressBar.style.width = '0%';
+      progressText.textContent = 'Preparando...';
+      confirmImportBtn.disabled = true;
+      cancelImportBtn.disabled = true;
+      
+      let success = 0;
+      let errors = 0;
+      
+      for (let i = 0; i < importQueue.length; i++) {
+        const item = importQueue[i];
+        progressBar.style.width = `${Math.round((i / importQueue.length) * 100)}%`;
+        progressText.textContent = `Subiendo ${i + 1} de ${importQueue.length}: ${item.displayName}`;
+        
+        try {
+          const formData = new FormData();
+          formData.append('category_id', item.categoryId);
+          formData.append('name', item.displayName);
+          formData.append('price', item.price);
+          formData.append('size', item.size);
+          formData.append('status', 'active');
+          formData.append('image', item.file);
+          
+          await api('/admin/products', {
+            method: 'POST',
+            headers: {}, // Let browser set Content-Type for FormData
+            body: formData
+          });
+          success++;
+        } catch (err) {
+          console.error('Import error:', err);
+          errors++;
+        }
+        
+        URL.revokeObjectURL(item.preview);
+      }
+      
+      progressBar.style.width = '100%';
+      progressText.textContent = 'Completado';
+      
+      importResult.style.display = 'block';
+      importResult.innerHTML = `
+        <h4 style="margin: 0 0 0.5rem; color: #2e7d32;">Importación completada</h4>
+        <p style="margin: 0; color: #666;">✅ ${success} productos creados ${errors > 0 ? `• ❌ ${errors} errores` : ''}</p>
+      `;
+      
+      importQueue = [];
+      importFiles = [];
+      folderInput.value = '';
+      
+      setTimeout(() => {
+        importProgress.style.display = 'none';
+        importResult.style.display = 'none';
+        confirmImportBtn.disabled = false;
+        cancelImportBtn.disabled = false;
+        loadProducts();
+        // Switch to products page
+        document.querySelector('[data-page="products"]').click();
+      }, 2000);
     });
 
     // Init
